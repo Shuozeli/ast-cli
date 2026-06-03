@@ -1,0 +1,19 @@
+---
+source: tests/integration.rs
+expression: python_results
+---
+- file: cpp/sample.cpp
+  kind: function
+  name: top_level_func
+  line: 12
+  signature: void top_level_func()
+- file: python/sample.py
+  kind: function
+  name: top_level_func
+  line: 6
+  signature: def top_level_func()
+- file: rust/sample.rs
+  kind: function
+  name: top_level_func
+  line: 11
+  signature: pub fn top_level_func ()

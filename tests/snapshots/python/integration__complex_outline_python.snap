@@ -1,0 +1,126 @@
+---
+source: tests/integration.rs
+expression: items
+---
+- kind: import
+  name: annotations
+  start_line: 3
+  end_line: 3
+- kind: import
+  name: asyncio
+  start_line: 5
+  end_line: 5
+- kind: import
+  name: dataclasses
+  start_line: 6
+  end_line: 6
+- kind: import
+  name: abc
+  start_line: 7
+  end_line: 7
+- kind: import
+  name: typing
+  start_line: 8
+  end_line: 8
+- kind: type_alias
+  name: Point
+  start_line: 13
+  end_line: 13
+- kind: class
+  name: Config
+  start_line: 17
+  end_line: 22
+- kind: class
+  name: BaseRepository
+  start_line: 26
+  end_line: 46
+  children:
+    - kind: function
+      name: __init__
+      start_line: 29
+      end_line: 30
+      signature: def __init__(self) -> None
+    - kind: function
+      name: validate
+      start_line: 32
+      end_line: 34
+      signature: "def validate(self, item: T) -> bool"
+    - kind: function
+      name: get
+      start_line: 36
+      end_line: 37
+      signature: "def get(self, key: str) -> Optional[T]"
+    - kind: function
+      name: put
+      start_line: 39
+      end_line: 42
+      signature: "def put(self, key: str, item: T) -> None"
+    - kind: function
+      name: count
+      start_line: 44
+      end_line: 46
+      signature: def count(self) -> int
+- kind: class
+  name: Auditable
+  start_line: 50
+  end_line: 54
+  children:
+    - kind: function
+      name: log_action
+      start_line: 53
+      end_line: 54
+      signature: "def log_action(self, action: str) -> None"
+- kind: class
+  name: UserRepository
+  start_line: 58
+  end_line: 86
+  children:
+    - kind: function
+      name: validate
+      start_line: 61
+      end_line: 62
+      signature: "def validate(self, item: dict[str, Any]) -> bool"
+    - kind: function
+      name: put
+      start_line: 64
+      end_line: 66
+      signature: "def put(self, key: str, item: dict[str, Any]) -> None"
+    - kind: function
+      name: create_default
+      start_line: 68
+      end_line: 70
+      signature: "def create_default(cls) -> \"UserRepository\""
+    - kind: function
+      name: normalize_email
+      start_line: 72
+      end_line: 74
+      signature: "def normalize_email(email: str) -> str"
+    - kind: class
+      name: Permissions
+      start_line: 77
+      end_line: 86
+      children:
+        - kind: function
+          name: __init__
+          start_line: 82
+          end_line: 83
+          signature: "def __init__(self, *roles: str) -> None"
+        - kind: function
+          name: has
+          start_line: 85
+          end_line: 86
+          signature: "def has(self, role: str) -> bool"
+- kind: function
+  name: fetch_users
+  start_line: 90
+  end_line: 99
+  signature: "def fetch_users(\n    base_url: str,\n    *,\n    limit: int = 100,\n    offset: int = 0,\n    filters: Optional[dict[str, Any]] = None,\n) -> list[dict[str, Any]]"
+- kind: function
+  name: create_pipeline
+  start_line: 103
+  end_line: 116
+  signature: "def create_pipeline(*steps: Any) -> Any"
+- kind: class
+  name: CacheEntry
+  start_line: 120
+  end_line: 124

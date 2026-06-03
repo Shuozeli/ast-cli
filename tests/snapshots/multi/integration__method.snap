@@ -1,0 +1,14 @@
+---
+source: tests/integration.rs
+expression: method_results
+---
+- file: cpp/sample.cpp
+  kind: function
+  name: method
+  line: 6
+  signature: void method()
+- file: python/sample.py
+  kind: function
+  name: method
+  line: 2
+  signature: def method(self)

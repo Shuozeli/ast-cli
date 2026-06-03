@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package test;
+
+message MyMessage {
+    string id = 1;
+}
+
+service MyService {
+    rpc DoThing(MyMessage) returns (MyMessage);
+}

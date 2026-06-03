@@ -1,0 +1,141 @@
+---
+source: tests/integration.rs
+expression: items
+---
+- kind: import
+  name: "\"node:events\""
+  start_line: 1
+  end_line: 1
+- kind: import
+  name: "\"node:crypto\""
+  start_line: 2
+  end_line: 2
+- kind: interface
+  name: Repository
+  start_line: 5
+  end_line: 9
+  visibility: export
+- kind: type_alias
+  name: Result
+  start_line: 12
+  end_line: 12
+  visibility: export
+- kind: interface
+  name: Timestamped
+  start_line: 15
+  end_line: 18
+- kind: interface
+  name: Identifiable
+  start_line: 20
+  end_line: 22
+- kind: interface
+  name: Entity
+  start_line: 24
+  end_line: 26
+  visibility: export
+- kind: class
+  name: BaseService
+  start_line: 29
+  end_line: 48
+  visibility: export
+  children:
+    - kind: field
+      name: items
+      start_line: 30
+      end_line: 30
+    - kind: method
+      name: find
+      start_line: 34
+      end_line: 36
+      signature: "async find (id: string) : Promise<T | undefined>"
+    - kind: method
+      name: save
+      start_line: 38
+      end_line: 43
+      signature: "async save (item: T) : Promise<void>"
+    - kind: method
+      name: count
+      start_line: 45
+      end_line: 47
+      signature: "get count () : number"
+- kind: class
+  name: UserService
+  start_line: 51
+  end_line: 71
+  visibility: export
+  children:
+    - kind: field
+      name: maxUsers
+      start_line: 52
+      end_line: 52
+    - kind: method
+      name: constructor
+      start_line: 54
+      end_line: 57
+      signature: "constructor (maxUsers: number = 100)"
+    - kind: method
+      name: validate
+      start_line: 59
+      end_line: 61
+      signature: "validate (item: User) : boolean"
+    - kind: method
+      name: findByEmail
+      start_line: 63
+      end_line: 70
+      signature: "async findByEmail (email: string) : Promise<User | undefined>"
+- kind: interface
+  name: User
+  start_line: 74
+  end_line: 78
+  visibility: export
+- kind: function
+  name: createUser
+  start_line: 81
+  end_line: 91
+  visibility: export
+- kind: function
+  name: paginate
+  start_line: 94
+  end_line: 98
+  visibility: export
+  signature: "function * paginate <T> (items: T[], pageSize: number) : Generator<T[]>"
+- kind: function
+  name: format
+  start_line: 103
+  end_line: 108
+  visibility: export
+  signature: "function format (value: string | number) : string"
+- kind: namespace
+  name: Validators
+  start_line: 111
+  end_line: 121
+  visibility: export
+  children:
+    - kind: function
+      name: isEmail
+      start_line: 112
+      end_line: 114
+      visibility: export
+      signature: "function isEmail (value: string) : boolean"
+    - kind: function
+      name: isNonEmpty
+      start_line: 116
+      end_line: 118
+      visibility: export
+      signature: "function isNonEmpty (value: string) : boolean"
+    - kind: type_alias
+      name: ValidationRule
+      start_line: 120
+      end_line: 120
+      visibility: export
+- kind: namespace
+  name: "\"external-lib\""
+  start_line: 124
+  end_line: 127
+  visibility: export
+  children:
+    - kind: const
+      name: VERSION
+      start_line: 126
+      end_line: 126
+      visibility: export

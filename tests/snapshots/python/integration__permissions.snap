@@ -1,0 +1,14 @@
+---
+source: tests/integration.rs
+expression: "ops::read::run(&path, \"UserRepository::Permissions\").unwrap()"
+---
+class Permissions:
+        READ = "read"
+        WRITE = "write"
+        ADMIN = "admin"
+
+        def __init__(self, *roles: str) -> None:
+            self.roles = set(roles)
+
+        def has(self, role: str) -> bool:
+            return role in self.roles

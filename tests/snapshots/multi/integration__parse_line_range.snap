@@ -1,0 +1,7 @@
+---
+source: tests/integration.rs
+expression: output
+---
+pub fn top_level_func() {
+    println!("Hello");
+}

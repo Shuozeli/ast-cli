@@ -1,0 +1,10 @@
+---
+source: tests/integration.rs
+expression: "ops::skeleton::run(&fixture_path(\"python/sample.py\")).unwrap()"
+---
+class MyClass:
+    def method(self):
+        ...
+
+def top_level_func():
+    ...

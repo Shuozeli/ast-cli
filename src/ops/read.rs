@@ -98,7 +98,8 @@ fn find_all_containers<'a>(
 fn get_container_type_name(node: Node, source: &str, lang: Lang) -> Option<String> {
     match lang {
         Lang::Rust => match node.kind() {
-            "impl_item" | "trait_item" | "struct_item" | "enum_item" | "mod_item" => node
+            "impl_item" | "trait_item" | "struct_item" | "enum_item" | "mod_item"
+            | "union_item" => node
                 .child_by_field_name("type")
                 .or_else(|| node.child_by_field_name("name"))
                 .and_then(|n| node_text(n, source).ok())
@@ -106,9 +107,10 @@ fn get_container_type_name(node: Node, source: &str, lang: Lang) -> Option<Strin
             _ => None,
         },
         Lang::Cpp => match node.kind() {
-            "class_specifier" | "struct_specifier" | "namespace_definition" => node
-                .child_by_field_name("name")
-                .and_then(|n| node_text(n, source).ok()),
+            "class_specifier" | "struct_specifier" | "namespace_definition" | "union_specifier" => {
+                node.child_by_field_name("name")
+                    .and_then(|n| node_text(n, source).ok())
+            }
             "template_declaration" => {
                 let mut cursor = node.walk();
                 for child in node.children(&mut cursor) {
@@ -121,7 +123,11 @@ fn get_container_type_name(node: Node, source: &str, lang: Lang) -> Option<Strin
             _ => None,
         },
         Lang::Typescript | Lang::Tsx => match node.kind() {
-            "class_declaration" | "interface_declaration" => node
+            "class_declaration"
+            | "abstract_class_declaration"
+            | "interface_declaration"
+            | "internal_module"
+            | "module" => node
                 .child_by_field_name("name")
                 .and_then(|n| node_text(n, source).ok()),
             "export_statement" => {
@@ -151,12 +157,13 @@ fn get_container_type_name(node: Node, source: &str, lang: Lang) -> Option<Strin
             _ => None,
         },
         Lang::Protobuf => match node.kind() {
-            "message" | "service" => node
+            "message" | "service" | "oneof" => node
                 .child_by_field_name("name")
                 .or_else(|| {
                     let mut cursor = node.walk();
-                    node.children(&mut cursor)
-                        .find(|c| matches!(c.kind(), "message_name" | "service_name"))
+                    node.children(&mut cursor).find(|c| {
+                        matches!(c.kind(), "message_name" | "service_name" | "oneof_name")
+                    })
                 })
                 .and_then(|n| node_text(n, source).ok()),
             _ => None,
@@ -196,8 +203,11 @@ fn is_wrapper_node(node: Node, lang: Lang) -> bool {
                 | "linkage_specification"
                 | "preproc_ifdef"
                 | "preproc_if"
+                | "declaration"
+                | "field_declaration"
                 | "ERROR"
         ),
+        Lang::Rust => node.kind() == "foreign_mod_item",
         _ => false,
     }
 }
@@ -206,11 +216,18 @@ fn get_definition_name(node: Node, source: &str, lang: Lang) -> Option<String> {
     match lang {
         Lang::Rust => match node.kind() {
             "function_item" | "struct_item" | "enum_item" | "trait_item" | "type_item"
-            | "const_item" | "static_item" | "mod_item" | "macro_definition" => node
+            | "const_item" | "static_item" | "mod_item" | "macro_definition" | "union_item" => node
                 .child_by_field_name("name")
                 .and_then(|n| node_text(n, source).ok()),
             "impl_item" => node
                 .child_by_field_name("type")
+                .and_then(|n| node_text(n, source).ok()),
+            "use_declaration" => node
+                .child_by_field_name("argument")
+                .and_then(|n| node_text(n, source).ok()),
+            "field_declaration" => node
+                .child_by_field_name("name")
+                .or_else(|| node.child_by_field_name("type"))
                 .and_then(|n| node_text(n, source).ok()),
             _ => None,
         },
@@ -219,26 +236,64 @@ fn get_definition_name(node: Node, source: &str, lang: Lang) -> Option<String> {
             | "class_specifier"
             | "struct_specifier"
             | "enum_specifier"
+            | "union_specifier"
+            | "concept_definition"
             | "namespace_definition" => node
                 .child_by_field_name("name")
                 .or_else(|| node.child_by_field_name("declarator"))
-                .map(|n| extract_innermost_name(n, source)),
+                .map(|n| languages::extract_innermost_name(n, source)),
+            "field_declaration" => {
+                if node.child_by_field_name("declarator").is_some() {
+                    node.child_by_field_name("declarator")
+                        .map(|n| languages::extract_innermost_name(n, source))
+                } else {
+                    None
+                }
+            }
+            "using_declaration" | "friend_declaration" => {
+                let mut cursor = node.walk();
+                node.children(&mut cursor)
+                    .find(|c| c.is_named())
+                    .and_then(|n| node_text(n, source).ok())
+            }
+            "preproc_include" => node
+                .child_by_field_name("path")
+                .and_then(|n| node_text(n, source).ok()),
             _ => None,
         },
         Lang::Typescript | Lang::Tsx => match node.kind() {
             "function_declaration"
+            | "generator_function_declaration"
             | "class_declaration"
+            | "abstract_class_declaration"
             | "interface_declaration"
             | "enum_declaration"
             | "type_alias_declaration"
-            | "method_definition" => node
+            | "method_definition"
+            | "internal_module"
+            | "module" => node
                 .child_by_field_name("name")
+                .and_then(|n| node_text(n, source).ok()),
+            "public_field_definition" => node
+                .child_by_field_name("name")
+                .or_else(|| node.child_by_field_name("property"))
+                .and_then(|n| node_text(n, source).ok()),
+            "import_statement" | "import_require_clause" => node
+                .child_by_field_name("source")
                 .and_then(|n| node_text(n, source).ok()),
             _ => None,
         },
         Lang::Python => match node.kind() {
-            "function_definition" | "class_definition" => node
+            "function_definition" | "class_definition" | "type_alias_statement" => node
                 .child_by_field_name("name")
+                .and_then(|n| node_text(n, source).ok()),
+            "import_statement" | "import_from_statement" | "future_import_statement" => node
+                .child_by_field_name("module_name")
+                .or_else(|| {
+                    let mut cursor = node.walk();
+                    node.children(&mut cursor)
+                        .find(|c| c.kind() == "dotted_name" || c.kind() == "aliased_import")
+                })
                 .and_then(|n| node_text(n, source).ok()),
             "decorated_definition" => {
                 let mut cursor = node.walk();
@@ -252,14 +307,19 @@ fn get_definition_name(node: Node, source: &str, lang: Lang) -> Option<String> {
             _ => None,
         },
         Lang::Protobuf => match node.kind() {
-            "message" | "enum" | "service" | "rpc" => node
+            "message" | "enum" | "service" | "rpc" | "oneof" | "field" => node
                 .child_by_field_name("name")
                 .or_else(|| {
                     let mut cursor = node.walk();
                     node.children(&mut cursor).find(|c| {
                         matches!(
                             c.kind(),
-                            "message_name" | "enum_name" | "service_name" | "rpc_name"
+                            "message_name"
+                                | "enum_name"
+                                | "service_name"
+                                | "rpc_name"
+                                | "oneof_name"
+                                | "field_name"
                         )
                     })
                 })
@@ -272,25 +332,4 @@ fn get_definition_name(node: Node, source: &str, lang: Lang) -> Option<String> {
 /// Strip generic parameters from a type name: `BinaryWalker<'a>` -> `BinaryWalker`
 fn strip_generics(name: &str) -> String {
     name.split('<').next().unwrap_or(name).to_string()
-}
-
-fn extract_innermost_name(node: Node, source: &str) -> String {
-    let mut n = node;
-    while matches!(
-        n.kind(),
-        "function_declarator"
-            | "qualified_identifier"
-            | "pointer_declarator"
-            | "reference_declarator"
-    ) {
-        if let Some(inner) = n
-            .child_by_field_name("name")
-            .or_else(|| n.child_by_field_name("declarator"))
-        {
-            n = inner;
-        } else {
-            break;
-        }
-    }
-    n.utf8_text(source.as_bytes()).unwrap_or("").to_string()
 }

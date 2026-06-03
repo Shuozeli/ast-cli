@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package engine.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// ── Nested messages and enums ───────────────────────────
+message User {
+    string id = 1;
+    string name = 2;
+    string email = 3;
+
+    enum Role {
+        ROLE_UNSPECIFIED = 0;
+        ROLE_USER = 1;
+        ROLE_ADMIN = 2;
+    }
+    Role role = 4;
+
+    message Address {
+        string street = 1;
+        string city = 2;
+        string country = 3;
+    }
+    Address address = 5;
+
+    // ── oneof block ─────────────────────────────────────
+    oneof contact {
+        string phone = 6;
+        string slack_handle = 7;
+    }
+
+    // ── map field ───────────────────────────────────────
+    map<string, string> metadata = 8;
+
+    google.protobuf.Timestamp created_at = 9;
+}
+
+// ── Separate message referencing nested types ───────────
+message UserList {
+    repeated User users = 1;
+    int32 total_count = 2;
+    string next_page_token = 3;
+}
+
+// ── Request/Response messages ───────────────────────────
+message GetUserRequest {
+    string user_id = 1;
+}
+
+message ListUsersRequest {
+    int32 page_size = 1;
+    string page_token = 2;
+    map<string, string> filters = 3;
+}
+
+message UpdateUserRequest {
+    string user_id = 1;
+    User user = 2;
+}
+
+// ── Service with streaming RPCs ─────────────────────────
+service UserService {
+    rpc GetUser(GetUserRequest) returns (User);
+    rpc ListUsers(ListUsersRequest) returns (UserList);
+    rpc UpdateUser(UpdateUserRequest) returns (User);
+    rpc StreamUpdates(GetUserRequest) returns (stream User);
+    rpc BatchImport(stream User) returns (UserList);
+}
+
+// ── Another service ─────────────────────────────────────
+service HealthService {
+    rpc Check(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+    enum ServingStatus {
+        UNKNOWN = 0;
+        SERVING = 1;
+        NOT_SERVING = 2;
+    }
+    ServingStatus status = 1;
+}

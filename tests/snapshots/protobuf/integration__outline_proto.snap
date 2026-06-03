@@ -1,0 +1,22 @@
+---
+source: tests/integration.rs
+expression: "ops::outline::run(&fixture_path(\"protobuf/sample.proto\")).unwrap()"
+---
+- kind: message
+  name: MyMessage
+  start_line: 5
+  end_line: 7
+  children:
+    - kind: field
+      name: id
+      start_line: 6
+      end_line: 6
+- kind: service
+  name: MyService
+  start_line: 9
+  end_line: 11
+  children:
+    - kind: rpc
+      name: DoThing
+      start_line: 10
+      end_line: 10

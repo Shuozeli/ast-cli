@@ -1,0 +1,30 @@
+---
+source: tests/integration.rs
+expression: "ops::outline::run(&fixture_path(\"ts/sample.ts\")).unwrap()"
+---
+- kind: interface
+  name: MyInterface
+  start_line: 1
+  end_line: 3
+  visibility: export
+- kind: class
+  name: MyClass
+  start_line: 5
+  end_line: 11
+  visibility: export
+  children:
+    - kind: field
+      name: id
+      start_line: 6
+      end_line: 6
+    - kind: method
+      name: doThing
+      start_line: 8
+      end_line: 10
+      signature: "doThing () : void"
+- kind: function
+  name: topLevelFunc
+  start_line: 13
+  end_line: 15
+  visibility: export
+  signature: function topLevelFunc ()

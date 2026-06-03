@@ -1,0 +1,7 @@
+---
+source: tests/integration.rs
+expression: "ops::read::run(&path, \"UserRepository::normalize_email\").unwrap()"
+---
+@staticmethod
+    def normalize_email(email: str) -> str:
+        return email.strip().lower()

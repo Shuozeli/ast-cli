@@ -26,9 +26,17 @@ pub fn run(dir: &Path, name: &str, kind_filter: Option<&str>) -> Result<Vec<Find
             return Ok(());
         }
         let items = outline::run(path)?;
-        collect_matches(&items, path, name, kind_filter, &mut results);
+        let display_path = path.strip_prefix(dir).unwrap_or(path);
+        collect_matches(&items, display_path, name, kind_filter, &mut results);
         Ok(())
     })?;
+    results.sort_by(|lhs, rhs| {
+        lhs.file
+            .cmp(&rhs.file)
+            .then(lhs.line.cmp(&rhs.line))
+            .then(lhs.kind.cmp(&rhs.kind))
+            .then(lhs.name.cmp(&rhs.name))
+    });
     Ok(results)
 }
 

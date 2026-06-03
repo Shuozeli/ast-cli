@@ -1,0 +1,7 @@
+---
+source: tests/integration.rs
+expression: "ops::read::run(&path, \"inner::InnerStruct\").unwrap()"
+---
+pub struct InnerStruct {
+        pub value: i32,
+    }

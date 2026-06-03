@@ -28,16 +28,16 @@ pub fn run(dir: &Path, exclude: &[String]) -> Result<ProjectSummary> {
     let mut files = Vec::new();
     walk::walk_source_files(dir, exclude, &mut |path| {
         if let Ok(lang) = Lang::detect(path) {
-            match outline::run(path) {
-                Ok(items) => {
-                    let source = std::fs::read_to_string(path)?;
+            match outline::run_with_source(path) {
+                Ok((items, source)) => {
                     let lines = source.lines().count();
                     let mut functions = 0;
                     let mut types = 0;
                     let mut tests = 0;
                     count_items(&items, &mut functions, &mut types, &mut tests);
+                    let display_path = path.strip_prefix(dir).unwrap_or(path);
                     files.push(FileSummary {
-                        path: path.to_path_buf(),
+                        path: display_path.to_path_buf(),
                         language: lang.name().to_string(),
                         lines,
                         functions,

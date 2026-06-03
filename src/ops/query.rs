@@ -64,7 +64,10 @@ pub fn print_text(results: &[QueryMatch]) {
         };
         // Truncate long text for display
         let display_text = if r.text.len() > 80 {
-            let boundary = r.text.floor_char_boundary(77);
+            let mut boundary = 77;
+            while !r.text.is_char_boundary(boundary) && boundary > 0 {
+                boundary -= 1;
+            }
             format!("{}...", &r.text[..boundary])
         } else {
             r.text.clone()

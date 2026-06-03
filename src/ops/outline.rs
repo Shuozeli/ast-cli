@@ -21,10 +21,15 @@ pub struct OutlineItem {
 }
 
 pub fn run(path: &Path) -> Result<Vec<OutlineItem>> {
+    let (items, _) = run_with_source(path)?;
+    Ok(items)
+}
+
+pub fn run_with_source(path: &Path) -> Result<(Vec<OutlineItem>, String)> {
     let (tree, source, lang) = languages::parse_file(path)?;
     let root = tree.root_node();
     let items = collect_items(root, &source, lang);
-    Ok(items)
+    Ok((items, source))
 }
 
 fn collect_items(node: Node, source: &str, lang: Lang) -> Vec<OutlineItem> {
@@ -60,6 +65,9 @@ fn should_recurse_cpp(node: Node) -> bool {
 }
 
 fn node_to_item(node: Node, source: &str, lang: Lang) -> Option<OutlineItem> {
+    if !node.is_named() {
+        return None;
+    }
     match lang {
         Lang::Rust => rust_item(node, source),
         Lang::Cpp => cpp_item(node, source),
@@ -83,6 +91,9 @@ fn rust_item(node: Node, source: &str) -> Option<OutlineItem> {
         "mod_item" => "module",
         "use_declaration" => "use",
         "macro_definition" => "macro",
+        "union_item" => "union",
+        "foreign_mod_item" => return rust_wrapper_item(node, source),
+        "field_declaration" => "field",
         _ => return None,
     };
 
@@ -90,7 +101,7 @@ fn rust_item(node: Node, source: &str) -> Option<OutlineItem> {
     let visibility = extract_child_text(node, "visibility_modifier", source);
     let signature = (kind == "function").then(|| extract_fn_signature(node, source, "block"));
 
-    let children = if matches!(kind, "impl" | "trait" | "module") {
+    let children = if matches!(kind, "impl" | "trait" | "module" | "union") {
         collect_body_items(node, source, Lang::Rust)
     } else {
         Vec::new()
@@ -105,6 +116,16 @@ fn rust_item(node: Node, source: &str) -> Option<OutlineItem> {
         signature,
         children,
     })
+}
+
+fn rust_wrapper_item(node: Node, source: &str) -> Option<OutlineItem> {
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        if let Some(item) = rust_item(child, source) {
+            return Some(item);
+        }
+    }
+    None
 }
 
 /// Extract a function signature by collecting all children before the body node.
@@ -135,7 +156,18 @@ fn cpp_item(node: Node, source: &str) -> Option<OutlineItem> {
         "enum_specifier" => "enum",
         "namespace_definition" => "namespace",
         "template_declaration" => return cpp_template_item(node, source),
-        "type_definition" => "typedef",
+        "type_definition" | "alias_declaration" => "typedef",
+        "concept_definition" => "concept",
+        "union_specifier" => "union",
+        "friend_declaration" => "friend",
+        "using_declaration" => "using",
+        "preproc_include" => "include",
+        "field_declaration" if node.child_by_field_name("declarator").is_some() => "field",
+        "declaration"
+        | "field_declaration"
+        | "preproc_ifdef"
+        | "preproc_if"
+        | "linkage_specification" => return cpp_wrapper_item(node, source),
         _ => return None,
     };
 
@@ -146,7 +178,7 @@ fn cpp_item(node: Node, source: &str) -> Option<OutlineItem> {
         None
     };
 
-    let children = if matches!(kind, "class" | "struct" | "namespace") {
+    let children = if matches!(kind, "class" | "struct" | "namespace" | "union") {
         collect_body_items(node, source, Lang::Cpp)
     } else {
         Vec::new()
@@ -181,6 +213,16 @@ fn cpp_template_item(node: Node, source: &str) -> Option<OutlineItem> {
     None
 }
 
+fn cpp_wrapper_item(node: Node, source: &str) -> Option<OutlineItem> {
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        if let Some(item) = cpp_item(child, source) {
+            return Some(item);
+        }
+    }
+    None
+}
+
 fn extract_name_cpp(node: Node, source: &str, kind_str: &str) -> String {
     match kind_str {
         "namespace_definition" => extract_child_text(node, "name", source)
@@ -197,27 +239,21 @@ fn extract_name_cpp(node: Node, source: &str, kind_str: &str) -> String {
                     .and_then(|n| node_text(n, source).ok())
                     .unwrap_or_else(|| "<unknown>".to_string())
             }),
+        "using_declaration" | "friend_declaration" => {
+            let mut cursor = node.walk();
+            node.children(&mut cursor)
+                .find(|c| c.is_named())
+                .and_then(|n| node_text(n, source).ok())
+                .unwrap_or_else(|| "<unknown>".to_string())
+        }
+        "preproc_include" => node
+            .child_by_field_name("path")
+            .and_then(|n| node_text(n, source).ok())
+            .unwrap_or_else(|| "<unknown>".to_string()),
         _ => node
             .child_by_field_name("name")
             .or_else(|| node.child_by_field_name("declarator"))
-            .map(|n| {
-                let mut n = n;
-                while n.kind() == "function_declarator"
-                    || n.kind() == "qualified_identifier"
-                    || n.kind() == "pointer_declarator"
-                    || n.kind() == "reference_declarator"
-                {
-                    if let Some(inner) = n
-                        .child_by_field_name("name")
-                        .or_else(|| n.child_by_field_name("declarator"))
-                    {
-                        n = inner;
-                    } else {
-                        break;
-                    }
-                }
-                node_text(n, source).unwrap_or_else(|_| "<unknown>".to_string())
-            })
+            .map(|n| languages::extract_innermost_name(n, source))
             .unwrap_or_else(|| "<unknown>".to_string()),
     }
 }
@@ -225,25 +261,39 @@ fn extract_name_cpp(node: Node, source: &str, kind_str: &str) -> String {
 fn ts_item(node: Node, source: &str) -> Option<OutlineItem> {
     let kind_str = node.kind();
     let kind = match kind_str {
-        "function_declaration" => "function",
-        "class_declaration" => "class",
+        "function_declaration" | "generator_function_declaration" => "function",
+        "class_declaration" | "abstract_class_declaration" => "class",
         "interface_declaration" => "interface",
         "enum_declaration" => "enum",
         "type_alias_declaration" => "type_alias",
         "lexical_declaration" => return ts_lexical_item(node, source),
-        "export_statement" => return ts_export_item(node, source),
+        "export_statement" | "ambient_declaration" => return ts_export_item(node, source),
         "method_definition" => "method",
+        "internal_module" | "module" => "namespace",
+        "public_field_definition" => "field",
+        "import_statement" | "import_require_clause" => "import",
         _ => return None,
     };
 
-    let name = extract_child_text(node, "name", source).unwrap_or_else(|| "<unknown>".to_string());
+    let name = if kind == "import" {
+        extract_child_text(node, "source", source).unwrap_or_else(|| "<unknown>".to_string())
+    } else {
+        extract_child_text(node, "name", source).unwrap_or_else(|| {
+            if kind == "field" {
+                extract_child_text(node, "property", source)
+                    .unwrap_or_else(|| "<unknown>".to_string())
+            } else {
+                "<unknown>".to_string()
+            }
+        })
+    };
     let signature = if kind == "function" || kind == "method" {
         Some(extract_fn_signature(node, source, "statement_block"))
     } else {
         None
     };
 
-    let children = if matches!(kind, "class" | "interface") {
+    let children = if matches!(kind, "class" | "interface" | "namespace") {
         collect_body_items(node, source, Lang::Typescript)
     } else {
         Vec::new()
@@ -302,10 +352,28 @@ fn python_item(node: Node, source: &str) -> Option<OutlineItem> {
         "function_definition" => "function",
         "class_definition" => "class",
         "decorated_definition" => return python_decorated_item(node, source),
+        "type_alias_statement" => "type_alias",
+        "import_statement" | "import_from_statement" | "future_import_statement" => "import",
         _ => return None,
     };
 
-    let name = extract_child_text(node, "name", source).unwrap_or_else(|| "<unknown>".to_string());
+    let name = if kind == "import" {
+        extract_child_text(node, "module_name", source).unwrap_or_else(|| {
+            let mut cursor = node.walk();
+            node.children(&mut cursor)
+                .find(|c| c.kind() == "dotted_name" || c.kind() == "aliased_import")
+                .and_then(|n| node_text(n, source).ok())
+                .unwrap_or_else(|| "<unknown>".to_string())
+        })
+    } else if kind == "type_alias" {
+        let mut cursor = node.walk();
+        node.children(&mut cursor)
+            .find(|c| c.is_named())
+            .and_then(|n| node_text(n, source).ok())
+            .unwrap_or_else(|| "<unknown>".to_string())
+    } else {
+        extract_child_text(node, "name", source).unwrap_or_else(|| "<unknown>".to_string())
+    };
     let signature = if kind == "function" {
         Some(extract_fn_signature_python(node, source))
     } else {
@@ -377,6 +445,8 @@ fn proto_item(node: Node, source: &str) -> Option<OutlineItem> {
         "enum" => "enum",
         "service" => "service",
         "rpc" => "rpc",
+        "oneof" => "oneof",
+        "field" => "field",
         _ => return None,
     };
 
@@ -389,12 +459,17 @@ fn proto_item(node: Node, source: &str) -> Option<OutlineItem> {
                         || c.kind() == "enum_name"
                         || c.kind() == "service_name"
                         || c.kind() == "rpc_name"
+                        || c.kind() == "oneof_name"
+                        || c.kind() == "field_name"
+                        || c.kind() == "field_identifier"
+                        || c.kind() == "identifier"
+                        || c.kind() == "oneof_identifier"
                 })
                 .and_then(|n| node_text(n, source).ok())
         })
         .unwrap_or_else(|| "<unknown>".to_string());
 
-    let children = if matches!(kind, "message" | "service") {
+    let children = if matches!(kind, "message" | "service" | "oneof") {
         collect_body_items(node, source, Lang::Protobuf)
     } else {
         Vec::new()
@@ -429,6 +504,15 @@ fn extract_name(node: Node, source: &str, kind_str: &str) -> String {
             }
             parts.join(" ")
         }
+        "use_declaration" => node
+            .child_by_field_name("argument")
+            .and_then(|n| node_text(n, source).ok())
+            .unwrap_or_else(|| "<unknown>".to_string()),
+        "field_declaration" => node
+            .child_by_field_name("name")
+            .or_else(|| node.child_by_field_name("type"))
+            .and_then(|n| node_text(n, source).ok())
+            .unwrap_or_else(|| "<unknown>".to_string()),
         _ => node
             .child_by_field_name("name")
             .and_then(|n| node_text(n, source).ok())
@@ -452,6 +536,8 @@ fn collect_body_items(node: Node, source: &str, lang: Lang) -> Vec<OutlineItem> 
                     items.push(item);
                 }
             }
+        } else if let Some(item) = node_to_item(child, source, lang) {
+            items.push(item);
         }
     }
     items

@@ -77,6 +77,7 @@ pub fn is_body_container(kind: &str) -> bool {
             | "class_body"
             | "interface_body"
             | "enum_body"
+            | "statement_block"
             | "message_body"
             | "service_body"
     )
@@ -92,4 +93,25 @@ pub fn parse_file(path: &Path) -> Result<(tree_sitter::Tree, String, Lang)> {
         .parse(&source, None)
         .ok_or_else(|| anyhow::anyhow!("failed to parse {}", path.display()))?;
     Ok((tree, source, lang))
+}
+
+pub fn extract_innermost_name(node: tree_sitter::Node, source: &str) -> String {
+    let mut n = node;
+    while matches!(
+        n.kind(),
+        "function_declarator"
+            | "qualified_identifier"
+            | "pointer_declarator"
+            | "reference_declarator"
+    ) {
+        if let Some(inner) = n
+            .child_by_field_name("name")
+            .or_else(|| n.child_by_field_name("declarator"))
+        {
+            n = inner;
+        } else {
+            break;
+        }
+    }
+    n.utf8_text(source.as_bytes()).unwrap_or("").to_string()
 }

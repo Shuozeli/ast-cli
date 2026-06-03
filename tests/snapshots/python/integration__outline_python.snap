@@ -1,0 +1,19 @@
+---
+source: tests/integration.rs
+expression: "ops::outline::run(&fixture_path(\"python/sample.py\")).unwrap()"
+---
+- kind: class
+  name: MyClass
+  start_line: 1
+  end_line: 4
+  children:
+    - kind: function
+      name: method
+      start_line: 2
+      end_line: 4
+      signature: def method(self)
+- kind: function
+  name: top_level_func
+  start_line: 6
+  end_line: 7
+  signature: def top_level_func()

@@ -1,0 +1,165 @@
+---
+source: tests/integration.rs
+expression: items
+---
+- kind: use
+  name: "std::collections::HashMap"
+  start_line: 1
+  end_line: 1
+- kind: use
+  name: "std::fmt"
+  start_line: 2
+  end_line: 2
+- kind: type_alias
+  name: Result
+  start_line: 5
+  end_line: 5
+- kind: enum
+  name: Error
+  start_line: 9
+  end_line: 13
+- kind: union
+  name: IntOrFloat
+  start_line: 16
+  end_line: 19
+  children:
+    - kind: field
+      name: i
+      start_line: 17
+      end_line: 17
+    - kind: field
+      name: f
+      start_line: 18
+      end_line: 18
+- kind: struct
+  name: Registry
+  start_line: 22
+  end_line: 25
+- kind: trait
+  name: Transform
+  start_line: 28
+  end_line: 36
+  children:
+    - kind: function
+      name: name
+      start_line: 33
+      end_line: 35
+      signature: fn name (&self) -> &str
+- kind: trait
+  name: Processor
+  start_line: 39
+  end_line: 41
+- kind: impl
+  name: "<'a, T: Clone + fmt::Debug> Registry<'a, T>"
+  start_line: 44
+  end_line: 63
+  children:
+    - kind: function
+      name: new
+      start_line: 45
+      end_line: 50
+      signature: "pub fn new (capacity: usize) -> Self"
+    - kind: function
+      name: insert
+      start_line: 52
+      end_line: 58
+      signature: "pub fn insert (&mut self, key: &'a str, value: T) -> Result<()>"
+    - kind: function
+      name: get
+      start_line: 60
+      end_line: 62
+      signature: "pub fn get (&self, key: &str) -> Option<&T>"
+- kind: impl
+  name: "<'a, T> Transform for Registry<'a, T>"
+  start_line: 66
+  end_line: 75
+  children:
+    - kind: type_alias
+      name: Output
+      start_line: 70
+      end_line: 70
+    - kind: function
+      name: transform
+      start_line: 72
+      end_line: 74
+      signature: "fn transform (&self) -> Self::Output"
+- kind: impl
+  name: "<'a, T: Clone + fmt::Debug> fmt::Display for Registry<'a, T>"
+  start_line: 78
+  end_line: 82
+  children:
+    - kind: function
+      name: fmt
+      start_line: 79
+      end_line: 81
+      signature: "fn fmt (&self, f: &mut fmt::Formatter<'_>) -> fmt::Result"
+- kind: function
+  name: fetch_data
+  start_line: 85
+  end_line: 88
+  signature: "pub async fn fetch_data (url: &str) -> Result<String>"
+- kind: function
+  name: max_capacity
+  start_line: 91
+  end_line: 93
+  signature: pub const fn max_capacity () -> usize
+- kind: function
+  name: raw_pointer_deref
+  start_line: 96
+  end_line: 98
+  signature: "pub unsafe fn raw_pointer_deref (ptr: *const u8) -> u8"
+- kind: macro
+  name: define_wrapper
+  start_line: 101
+  end_line: 107
+- kind: module
+  name: inner
+  start_line: 110
+  end_line: 124
+  children:
+    - kind: struct
+      name: InnerStruct
+      start_line: 111
+      end_line: 113
+    - kind: impl
+      name: InnerStruct
+      start_line: 115
+      end_line: 119
+      children:
+        - kind: function
+          name: new
+          start_line: 116
+          end_line: 118
+          signature: "pub fn new (value: i32) -> Self"
+    - kind: function
+      name: helper
+      start_line: 121
+      end_line: 123
+      signature: pub fn helper () -> bool
+- kind: static
+  name: DEFAULT_NAME
+  start_line: 127
+  end_line: 127
+- kind: const
+  name: VERSION
+  start_line: 130
+  end_line: 130
+- kind: module
+  name: tests
+  start_line: 140
+  end_line: 153
+  children:
+    - kind: use
+      name: "super::*"
+      start_line: 141
+      end_line: 141
+    - kind: function
+      name: test_registry_insert
+      start_line: 144
+      end_line: 147
+      signature: fn test_registry_insert ()
+    - kind: function
+      name: test_max_capacity
+      start_line: 150
+      end_line: 152
+      signature: fn test_max_capacity ()

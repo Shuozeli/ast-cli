@@ -1,0 +1,13 @@
+---
+source: tests/integration.rs
+expression: "ops::skeleton::run(&fixture_path(\"rust/sample.rs\")).unwrap()"
+---
+pub struct MyStruct {
+    field: i32,
+}
+
+impl MyStruct {
+    pub fn new() -> Self { todo!() }
+}
+
+pub fn top_level_func() { todo!() }

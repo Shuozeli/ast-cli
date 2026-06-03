@@ -1,5 +1,4 @@
-mod languages;
-mod ops;
+use ast_cli::ops;
 
 use std::path::PathBuf;
 
@@ -54,6 +53,10 @@ enum Commands {
         /// Filter by kind (function, struct, class, enum, trait, etc.)
         #[arg(long)]
         kind: Option<String>,
+
+        /// Output format
+        #[arg(long, default_value = "text")]
+        format: OutputFormat,
     },
 
     /// Run a tree-sitter query against a file
@@ -63,6 +66,10 @@ enum Commands {
 
         /// Tree-sitter S-expression query
         query: String,
+
+        /// Output format
+        #[arg(long, default_value = "text")]
+        format: OutputFormat,
     },
 
     /// Show project-wide file summary
@@ -107,13 +114,32 @@ fn main() -> Result<()> {
             let output = ops::read::run(&file, &address)?;
             print!("{output}");
         }
-        Commands::Find { dir, name, kind } => {
+        Commands::Find {
+            dir,
+            name,
+            kind,
+            format,
+        } => {
             let results = ops::find::run(&dir, &name, kind.as_deref())?;
-            ops::find::print_text(&results);
+            match format {
+                OutputFormat::Text => ops::find::print_text(&results),
+                OutputFormat::Json => {
+                    println!("{}", serde_json::to_string_pretty(&results)?);
+                }
+            }
         }
-        Commands::Query { file, query } => {
+        Commands::Query {
+            file,
+            query,
+            format,
+        } => {
             let results = ops::query::run(&file, &query)?;
-            ops::query::print_text(&results);
+            match format {
+                OutputFormat::Text => ops::query::print_text(&results),
+                OutputFormat::Json => {
+                    println!("{}", serde_json::to_string_pretty(&results)?);
+                }
+            }
         }
         Commands::Project {
             dir,

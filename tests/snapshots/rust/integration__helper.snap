@@ -1,0 +1,7 @@
+---
+source: tests/integration.rs
+expression: "ops::read::run(&path, \"inner::helper\").unwrap()"
+---
+pub fn helper() -> bool {
+        true
+    }

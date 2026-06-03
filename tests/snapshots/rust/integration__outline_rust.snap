@@ -1,0 +1,23 @@
+---
+source: tests/integration.rs
+expression: "ops::outline::run(&fixture_path(\"rust/sample.rs\")).unwrap()"
+---
+- kind: struct
+  name: MyStruct
+  start_line: 1
+  end_line: 3
+- kind: impl
+  name: MyStruct
+  start_line: 5
+  end_line: 9
+  children:
+    - kind: function
+      name: new
+      start_line: 6
+      end_line: 8
+      signature: pub fn new () -> Self
+- kind: function
+  name: top_level_func
+  start_line: 11
+  end_line: 13
+  signature: pub fn top_level_func ()

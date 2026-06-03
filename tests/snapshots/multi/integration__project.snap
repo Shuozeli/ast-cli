@@ -1,0 +1,67 @@
+---
+source: tests/integration.rs
+expression: summary
+---
+files:
+  - path: cpp/advanced.cpp
+    language: cpp
+    lines: 150
+    functions: 19
+    types: 5
+    tests: 0
+  - path: cpp/sample.cpp
+    language: cpp
+    lines: 14
+    functions: 2
+    types: 1
+    tests: 0
+  - path: protobuf/advanced.proto
+    language: protobuf
+    lines: 85
+    functions: 6
+    types: 10
+    tests: 0
+  - path: protobuf/sample.proto
+    language: protobuf
+    lines: 11
+    functions: 1
+    types: 1
+    tests: 0
+  - path: python/advanced.py
+    language: python
+    lines: 124
+    functions: 14
+    types: 7
+    tests: 0
+  - path: python/sample.py
+    language: python
+    lines: 7
+    functions: 2
+    types: 1
+    tests: 0
+  - path: rust/advanced.rs
+    language: rust
+    lines: 153
+    functions: 13
+    types: 7
+    tests: 2
+  - path: rust/sample.rs
+    language: rust
+    lines: 13
+    functions: 2
+    types: 1
+    tests: 0
+  - path: ts/advanced.ts
+    language: typescript
+    lines: 127
+    functions: 11
+    types: 9
+    tests: 0
+  - path: ts/sample.ts
+    language: typescript
+    lines: 15
+    functions: 2
+    types: 2
+    tests: 0
+total_files: 10
+total_lines: 699

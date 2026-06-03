@@ -1,0 +1,12 @@
+---
+source: tests/integration.rs
+expression: "ops::read::run(&path, \"UserService::findByEmail\").unwrap()"
+---
+async findByEmail(email: string): Promise<User | undefined> {
+        for (const user of this.items.values()) {
+            if (user.email === email) {
+                return user;
+            }
+        }
+        return undefined;
+    }

@@ -1,0 +1,7 @@
+---
+source: tests/integration.rs
+expression: "ops::read::run(&ts_path, \"MyClass::doThing\").unwrap()"
+---
+doThing(): void {
+        console.log("thing");
+    }

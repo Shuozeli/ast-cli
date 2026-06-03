@@ -1,0 +1,14 @@
+---
+source: tests/integration.rs
+expression: results
+---
+- file: python/advanced.py
+  kind: function
+  name: validate
+  line: 32
+  signature: "def validate(self, item: T) -> bool"
+- file: python/advanced.py
+  kind: function
+  name: validate
+  line: 61
+  signature: "def validate(self, item: dict[str, Any]) -> bool"

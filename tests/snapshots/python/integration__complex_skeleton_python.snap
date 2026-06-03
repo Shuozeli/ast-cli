@@ -1,0 +1,111 @@
+---
+source: tests/integration.rs
+expression: skeleton
+---
+"""Advanced Python module for testing ast-cli."""
+
+from __future__ import annotations
+
+import asyncio
+from dataclasses import dataclass, field
+from abc import ABC, abstractmethod
+from typing import Any, Optional, TypeVar, Generic
+
+T = TypeVar("T")
+
+# ── Type Alias (Python 3.12+) ────────────────────────────
+type Point = tuple[float, float]
+
+
+# ── Dataclass decorator ─────────────────────────────────
+@dataclass
+class Config:
+    host: str = "localhost"
+    port: int = 8080
+    debug: bool = False
+    tags: list[str] = field(default_factory=list)
+
+
+# ── Abstract base class ─────────────────────────────────
+class BaseRepository(ABC, Generic[T]):
+    """Abstract repository providing CRUD operations."""
+
+    def __init__(self) -> None:
+        ...
+
+    @abstractmethod
+    def validate(self, item: T) -> bool:
+        ...
+
+    def get(self, key: str) -> Optional[T]:
+        ...
+
+    def put(self, key: str, item: T) -> None:
+        ...
+
+    @property
+    def count(self) -> int:
+        ...
+
+
+# ── Multiple inheritance ─────────────────────────────────
+class Auditable:
+    """Mixin for audit logging."""
+
+    def log_action(self, action: str) -> None:
+        ...
+
+
+# ── Complex class: multiple inheritance + decorators ─────
+class UserRepository(BaseRepository[dict[str, Any]], Auditable):
+    """Concrete repository for user records."""
+
+    def validate(self, item: dict[str, Any]) -> bool:
+        ...
+
+    def put(self, key: str, item: dict[str, Any]) -> None:
+        ...
+
+    @classmethod
+    def create_default(cls) -> "UserRepository":
+        ...
+
+    @staticmethod
+    def normalize_email(email: str) -> str:
+        ...
+
+    # ── Inner class ──────────────────────────────────────
+    class Permissions:
+        READ = "read"
+        WRITE = "write"
+        ADMIN = "admin"
+
+        def __init__(self, *roles: str) -> None:
+            ...
+
+        def has(self, role: str) -> bool:
+            ...
+
+
+# ── Async function with complex signature ────────────────
+async def fetch_users(
+    base_url: str,
+    *,
+    limit: int = 100,
+    offset: int = 0,
+    filters: Optional[dict[str, Any]] = None,
+) -> list[dict[str, Any]]:
+    ...
+
+
+# ── Nested functions (closures) ──────────────────────────
+def create_pipeline(*steps: Any) -> Any:
+    ...
+
+
+# ── Multiple stacked decorators ──────────────────────────
+@dataclass
+class CacheEntry(Generic[T]):
+    key: str
+    value: T
+    ttl: int = 300

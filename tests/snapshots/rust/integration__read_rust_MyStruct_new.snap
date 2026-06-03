@@ -1,0 +1,7 @@
+---
+source: tests/integration.rs
+expression: "ops::read::run(&rs_path, \"MyStruct::new\").unwrap()"
+---
+pub fn new() -> Self {
+        Self { field: 0 }
+    }

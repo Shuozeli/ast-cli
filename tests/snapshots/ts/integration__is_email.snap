@@ -1,0 +1,7 @@
+---
+source: tests/integration.rs
+expression: "ops::read::run(&path, \"Validators::isEmail\").unwrap()"
+---
+function isEmail(value: string): boolean {
+        return value.includes("@");
+    }

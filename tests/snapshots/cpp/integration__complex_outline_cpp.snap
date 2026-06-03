@@ -1,0 +1,235 @@
+---
+source: tests/integration.rs
+expression: items
+---
+- kind: include
+  name: "<string>"
+  start_line: 1
+  end_line: 2
+- kind: include
+  name: "<vector>"
+  start_line: 2
+  end_line: 3
+- kind: include
+  name: "<memory>"
+  start_line: 3
+  end_line: 4
+- kind: include
+  name: "<functional>"
+  start_line: 4
+  end_line: 5
+- kind: namespace
+  name: engine
+  start_line: 7
+  end_line: 132
+  children:
+    - kind: namespace
+      name: core
+      start_line: 8
+      end_line: 88
+      children:
+        - kind: template_class
+          name: FixedBuffer
+          start_line: 11
+          end_line: 31
+          children:
+            - kind: function
+              name: FixedBuffer
+              start_line: 14
+              end_line: 14
+              signature: "FixedBuffer() : size_(0)"
+            - kind: function
+              name: push
+              start_line: 16
+              end_line: 20
+              signature: void push(const T& value)
+            - kind: function
+              name: "& at(size_t index) const"
+              start_line: 22
+              end_line: 24
+              signature: const T & at(size_t index) const
+            - kind: function
+              name: size
+              start_line: 26
+              end_line: 26
+              signature: size_t size() const
+            - kind: field
+              name: "data_[N]"
+              start_line: 29
+              end_line: 29
+            - kind: field
+              name: size_
+              start_line: 30
+              end_line: 30
+        - kind: class
+          name: Component
+          start_line: 34
+          end_line: 45
+          children:
+            - kind: function
+              name: ~Component
+              start_line: 36
+              end_line: 36
+              signature: virtual ~Component() = default;
+            - kind: field
+              name: update
+              start_line: 38
+              end_line: 38
+            - kind: field
+              name: name
+              start_line: 39
+              end_line: 39
+            - kind: function
+              name: id
+              start_line: 41
+              end_line: 41
+              signature: int id() const
+            - kind: field
+              name: id_
+              start_line: 44
+              end_line: 44
+        - kind: class
+          name: Serializable
+          start_line: 48
+          end_line: 51
+          children:
+            - kind: field
+              name: serialize
+              start_line: 50
+              end_line: 50
+        - kind: class
+          name: Transform
+          start_line: 53
+          end_line: 86
+          children:
+            - kind: class
+              name: Matrix
+              start_line: 56
+              end_line: 62
+              children:
+                - kind: field
+                  name: "data[16]"
+                  start_line: 58
+                  end_line: 58
+                - kind: function
+                  name: Matrix
+                  start_line: 59
+                  end_line: 59
+                  signature: "Matrix() : data{}"
+                - kind: function
+                  name: determinant
+                  start_line: 60
+                  end_line: 60
+                  signature: float determinant() const
+                - kind: friend
+                  name: Transform
+                  start_line: 61
+                  end_line: 61
+            - kind: function
+              name: Transform
+              start_line: 64
+              end_line: 64
+              signature: "Transform() : position_{0, 0, 0}"
+            - kind: function
+              name: update
+              start_line: 66
+              end_line: 68
+              signature: void update(double dt) override
+            - kind: function
+              name: name
+              start_line: 70
+              end_line: 72
+              signature: "std::string name() const override"
+            - kind: function
+              name: serialize
+              start_line: 74
+              end_line: 76
+              signature: "std::string serialize() const override"
+            - kind: function
+              name: set_position
+              start_line: 78
+              end_line: 82
+              signature: "void set_position(float x, float y, float z)"
+            - kind: field
+              name: "position_[3]"
+              start_line: 85
+              end_line: 85
+    - kind: typedef
+      name: ComponentPtr
+      start_line: 91
+      end_line: 91
+    - kind: template_concept
+      name: Integral
+      start_line: 94
+      end_line: 95
+    - kind: union
+      name: VariantData
+      start_line: 98
+      end_line: 101
+      children:
+        - kind: field
+          name: i
+          start_line: 99
+          end_line: 99
+        - kind: field
+          name: f
+          start_line: 100
+          end_line: 100
+    - kind: typedef
+      name: ComponentList
+      start_line: 104
+      end_line: 104
+    - kind: template_function
+      name: clamp
+      start_line: 107
+      end_line: 112
+      signature: "T clamp(T value, T min_val, T max_val)"
+    - kind: function
+      name: factorial
+      start_line: 115
+      end_line: 117
+      signature: constexpr int factorial(int n)
+    - kind: class
+      name: Vec2
+      start_line: 120
+      end_line: 130
+      children:
+        - kind: field
+          name: x
+          start_line: 122
+          end_line: 122
+        - kind: function
+          name: Vec2
+          start_line: 123
+          end_line: 123
+          signature: "Vec2(float x, float y) : x(x), y(y)"
+        - kind: function
+          name: operator+
+          start_line: 124
+          end_line: 126
+          signature: Vec2 operator+(const Vec2& other) const
+        - kind: function
+          name: operator==
+          start_line: 127
+          end_line: 129
+          signature: bool operator==(const Vec2& other) const
+- kind: namespace
+  name: logging
+  start_line: 136
+  end_line: 140
+  children:
+    - kind: function
+      name: log
+      start_line: 137
+      end_line: 139
+      signature: "void log(const std::string& msg)"
+- kind: namespace
+  name: "<anonymous>"
+  start_line: 144
+  end_line: 150
+  children:
+    - kind: function
+      name: increment
+      start_line: 147
+      end_line: 149
+      signature: void increment()
